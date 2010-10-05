@@ -1,1 +1,103 @@
-/Users/colm/Dropbox/resources/experiments/twitterRecursion.html
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-type" content="text/html" charset="utf-8">
+		<title>The Recursion Experiment</title>
+		
+		<style>
+		
+		.tweet-image { width: 48px; height: 48px;}
+		
+		</style>
+		
+		
+	</head>
+	<body>
+		
+		<h2>Latest Tweets</h2>
+		
+		<ul id="tweets"></ul>
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<script>
+			(function() {
+				var UpdatePanel = {
+					init : function(options) {
+						this.options = $.extend({
+							interval : 50000,
+							number : 3
+						},options);
+						
+						this.options.url += '&callback=?';
+						
+						this.updater();
+					},
+					
+					updater : function(){
+						(function updateBox(){
+							setTimeout(function(){
+								updateIt();
+								updateBox();
+							}, UpdatePanel.options.interval)
+						})();
+						
+						// get the ball rolling
+						
+						updateIt();
+						
+						function updateIt() {
+							$.ajax({
+								type: 'GET',
+								url: UpdatePanel.options.url,
+								dataType: 'json',
+								
+								error : function() {},
+								
+								success : function(results) {
+									console.log(results);
+									var theTweets = '',
+									    elem = 							UpdatePanel.options.elem
+									elem.empty();
+									
+									$.each(results.results, function(index, tweet){
+							
+										if ( index === UpdatePanel.options.number) {
+											return false;
+										} else {
+											UpdatePanel.createTweetDisplay(tweet)
+												.prependTo(elem)
+												.wrap($('<li>', {'class':'tweet'}));
+											
+										}
+									});
+								//	elem.append(theTweets);
+								}
+							});
+							
+						}
+					},
+					
+					createTweetDisplay : function(tweet) {
+						var theTweet = $('<div>', {'class':'tweet-wrap'});
+						theTweet
+							.prepend($('<img>', {'src':tweet.profile_image_url, 'class':'tweet-image'}))
+							.append($('<p>', {'text': tweet.text, 'class':'tweet-text'}))
+							.append($('<a>', {'class':'user-link', 'href': 'http://twitter.com/'+tweet.from_user, 'text':'@'+tweet.from_user}));
+						return theTweet;
+						
+					}
+				};
+				window.UpdatePanel = UpdatePanel;
+			})();
+			
+			UpdatePanel.init({
+				interval : 10000,
+				number : 10,
+				url : "http://search.twitter.com/search.json?q=DearMrHicks",
+				elem : $('#tweets')
+			});
+		</script>
+	</body>
+</html>
